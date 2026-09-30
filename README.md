@@ -59,5 +59,5 @@ CLIENT_ORIGIN=http://localhost:5173
 ```
 VITE_API_URL=http://localhost:5000/api
 ```
-# INT377
-# INT377
+# INT378
+# INT378
