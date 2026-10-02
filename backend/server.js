@@ -27,6 +27,25 @@ app.get('/api/health', (req, res) => {
     db: dbStatus,
   });
 });
+// CPU load test route - used only for Kubernetes HPA demonstration
+app.get('/api/load-test', (req, res) => {
+  const duration = Math.min(Number(req.query.duration) || 500, 5000);
+  const endTime = Date.now() + duration;
+
+  let result = 0;
+
+  while (Date.now() < endTime) {
+    for (let i = 0; i < 1000; i++) {
+      result += Math.sqrt(i * Math.random());
+    }
+  }
+
+  res.json({
+    message: 'CPU load test completed',
+    duration,
+    result,
+  });
+});
 
 // Task routes
 app.use('/api/tasks', taskRoutes);
