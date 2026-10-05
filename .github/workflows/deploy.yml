@@ -1,12 +1,16 @@
-name: Build and Push Docker Images
+name: Build, Push and Deploy
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
-  docker:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,3 +36,31 @@ jobs:
           context: ./frontend
           push: true
           tags: prince765/todo-frontend-devops:latest
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::794194376609:role/GitHubActions-EKS-INT378
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region us-east-1 \
+            --name todo-cluster
+
+      - name: Restart backend
+        run: |
+          kubectl -n todo-app rollout restart deployment/todo-backend
+
+      - name: Restart frontend
+        run: |
+          kubectl -n todo-app rollout restart deployment/todo-frontend
+
+      - name: Wait for backend rollout
+        run: |
+          kubectl -n todo-app rollout status deployment/todo-backend --timeout=180s
+
+      - name: Wait for frontend rollout
+        run: |
+          kubectl -n todo-app rollout status deployment/todo-frontend --timeout=180s
